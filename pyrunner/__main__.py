@@ -1,3 +1,3 @@
-from app import run
+from pyrunner.app import run
 
 run()
