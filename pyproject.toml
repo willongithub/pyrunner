@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "PyRunner"
 version = "0.1.0"
-description = "A CLI tool to do run containerized appication in batch via YAML config."
+description = "A tool to run containerized CLI appication in batch via YAML config."
 authors = ["Liam Wu <foo@bar.com>"]
 readme = "README.md"
 packages = [{include = "pyrunner"}]
@@ -14,6 +14,7 @@ pyyaml = "^6.0"
 click = "^8.1.3"
 rich = "^13.3.1"
 pendulum = "^2.1.2"
+docker = "^6.0.1"
 
 
 [build-system]

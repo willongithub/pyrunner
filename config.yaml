@@ -1,11 +1,11 @@
-runtime:
+engine:
   shm-size: 8G
   cpus: 6
   memory: 10G
-  pull: Yes
-  volumn: data
+  pull: YES
+  volume: data
   image: "qa:latest"
-  entrypoint: "python3.8 -m"
+  entrypoint: "python3.8 -m qa"
 
 job:
   - name: Iris Dataset 1
