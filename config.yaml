@@ -1,5 +1,5 @@
-engine:
-  shm-size: 8G
+runtime:
+  shm: 8G
   cpus: 6
   memory: 10G
   pull: YES

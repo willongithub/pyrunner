@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 
 import json
-import click
+from models import RuntimeConfiguration, JobConfiguration
 import docker
 from rich.console import Console
 
@@ -33,8 +33,8 @@ def get_ram(bytes) -> str:
     return ram
 
 
-def do_job(engine: dict, job: dict) -> None:
-    Console().print_json(json.dumps(job["flags"]))
+def do_job(runtime: RuntimeConfiguration, job: JobConfiguration) -> None:
+    Console().print(job)
     cmd = [
         "docker",
         "run",
@@ -42,26 +42,26 @@ def do_job(engine: dict, job: dict) -> None:
         "-it",
         "--shm-size=8G",
         "-v",
-        f"{Path.cwd()}/{engine['volume']}:/app/data",
+        f"{Path.cwd()}/{runtime.volume}:/app/data",
     ]
-    if "cpus" in list(engine.keys()):
-        cmd.append(f"--cpus={engine['cpus']}")
-    if "memory" in list(engine.keys()):
-        cmd.append(f"--memory={engine['memory']}")
-    if "pull" in list(engine.keys()):
-        if engine["pull"]:
+    if "cpus" in list(runtime.dict().keys()):
+        cmd.append(f"--cpus={runtime.cpus}")
+    if "memory" in list(runtime.dict().keys()):
+        cmd.append(f"--memory={runtime.memory}")
+    if "pull" in list(runtime.dict().keys()):
+        if runtime.pull:
             cmd.append("--pull=always")
-    cmd.append(engine["image"])
-    entrypoint = engine["entrypoint"]
-    for flag, value in job["flags"].items():
+    cmd.append(runtime.image)
+    entrypoint = runtime.entrypoint
+    for flag, value in job.dict().items():
         entrypoint += f" --{flag} {value}"
     cmd.append(entrypoint)
     subprocess.call(cmd)
 
 
-CONFIG_TEMPLATE ="""# Docker engine runtime configuration.
-engine:
-  shm-size: 8G
+CONFIG_TEMPLATE = """# Docker engine runtime configuration.
+runtime:
+  shm: 8G
   cpus: 6
   memory: 10G
   pull: YES

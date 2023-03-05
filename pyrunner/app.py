@@ -1,16 +1,18 @@
 import json
 from pathlib import Path
 
-from pyrunner.utils import get_runtime_info, do_job, CONFIG_TEMPLATE
 import click
 import pendulum
 import yaml
+from models import RuntimeConfiguration, JobConfiguration
+from rich import print
 from rich.console import Console
 from rich.progress import MofNCompleteColumn, Progress, SpinnerColumn
 from rich.text import Text
 
 from pyrunner import __name__ as name
 from pyrunner import __version__ as version
+from pyrunner.utils import CONFIG_TEMPLATE, do_job, get_runtime_info
 
 
 @click.command()
@@ -38,7 +40,7 @@ def run(yml, template, verbose):
     if template:
         output = Path("config_template.yaml")
         output.write_text(CONFIG_TEMPLATE)
-        click.echo(f"\nTemplate config file generated at: {str(output)}.\n")
+        print(f"\nTemplate config file generated at: {str(output)}.\n")
         return
 
     console = Console()
@@ -51,47 +53,48 @@ def run(yml, template, verbose):
 
     file = Path(yml)
     if not file.exists():
-        click.echo("Please specify YAMl configuration file.")
+        print("Please specify YAMl configuration file.")
         return
     
     try:
-        if verbose: click.echo("\n>>> Runtime info:")
+        if verbose: print("\n>>> Runtime info:")
         info = get_runtime_info()
         if verbose: Console().print_json(json.dumps(info))
     except Exception as e:
-        click.echo(f"Fail to detect Docker engine: {str(e)}")
+        print(f"Fail to detect Docker engine: {str(e)}")
         return
     
     try:
         with open(file) as f:
             config = yaml.safe_load(f)
-        engine = config["engine"]
+        runtime = RuntimeConfiguration(**config.get("runtime"))
         job_queue = config["job"]
     except Exception as e:
-        click.echo(f"Invalid YAMl configuration file: {str(e)}")
+        print(f"Invalid YAMl configuration file: {str(e)}")
         return
 
     if verbose: 
-        click.echo("\n>>> Job config:")
-        Console().print_json(json.dumps(engine))
-        click.echo("\n>>> Job queue:")
+        print("\n>>> Job config:")
+        Console().print_json(json.dumps(runtime))
+        print("\n>>> Job queue:")
         Console().print_json(json.dumps(job_queue))
     
-    volume = Path(engine["volume"])
+    volume = Path(runtime.volume)
     if not volume.exists():
         volume.mkdir(parents=True, exist_ok=True)
-        click.echo(f"Input folder mounted at: {str(volume)}. Put files in it and restart.")
+        print(f"Input folder mounted at: {str(volume)}. Put files in it and restart.")
         return
 
-    click.echo(f"\n>>> Start: {pendulum.now()}")
+    print(f"\n>>> Start: {pendulum.now()}")
 
     with Progress(
             SpinnerColumn(), MofNCompleteColumn(), *Progress.get_default_columns()
         ) as p:
             job_progress = p.add_task("[orange]Running...", total=len(job_queue))
             for job in job_queue:
-                click.echo(f"\n>> {job['name']}")
-                do_job(engine, job)
+                print(f"\n>> {job.get('name', 'No name')}")
+                job = JobConfiguration(**job)
+                do_job(runtime, job)
                 p.update(job_progress, advance=1)
 
-    click.echo(f"\n>>> End: {pendulum.now()}")
+    print(f"\n>>> End: {pendulum.now()}")
