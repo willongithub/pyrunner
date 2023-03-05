@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from pyrunner.utils import get_runtime_info, do_job
+from pyrunner.utils import get_runtime_info, do_job, CONFIG_TEMPLATE
 import click
 import pendulum
 import yaml
@@ -21,10 +21,11 @@ from pyrunner import __version__ as version
     help="Specify path to configuration YAML file.",
 )
 @click.option(
-    "--data",
-    "-D",
-    default="data",
-    help="Specify data folder mounted on container.",
+    "--template",
+    "-T",
+    is_flag=True,
+    default=False,
+    help="Request a template of configuration file.",
 )
 @click.option(
     "--verbose",
@@ -33,7 +34,13 @@ from pyrunner import __version__ as version
     default=True,
     help="Display detail info.",
 )
-def run(yml, data, verbose):
+def run(yml, template, verbose):
+    if template:
+        output = Path("config_template.yaml")
+        output.write_text(CONFIG_TEMPLATE)
+        click.echo(f"\nTemplate config file generated at: {str(output)}.\n")
+        return
+
     console = Console()
     title = Text("")
     title.append(f"\nWelcome to ")
@@ -43,11 +50,6 @@ def run(yml, data, verbose):
     console.print(title)
 
     file = Path(yml)
-    volume = Path(data)
-
-    if data:
-        volume.mkdir(parents=True, exist_ok=True)
-
     if not file.exists():
         click.echo("Please specify YAMl configuration file.")
         return
@@ -74,6 +76,12 @@ def run(yml, data, verbose):
         Console().print_json(json.dumps(engine))
         click.echo("\n>>> Job queue:")
         Console().print_json(json.dumps(job_queue))
+    
+    volume = Path(engine["volume"])
+    if not volume.exists():
+        volume.mkdir(parents=True, exist_ok=True)
+        click.echo(f"Input folder mounted at: {str(volume)}. Put files in it and restart.")
+        return
 
     click.echo(f"\n>>> Start: {pendulum.now()}")
 
