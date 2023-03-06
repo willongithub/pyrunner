@@ -14,7 +14,7 @@ class RuntimeConfiguration(BaseModel):
     def shm_must_follow_by_unit(cls, v):
         assert v.endswith("G")
         return v
-    
+
     @validator("memory")
     def memory_must_follow_by_unit(cls, v):
         assert v.endswith("G")

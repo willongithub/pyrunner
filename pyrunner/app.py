@@ -4,7 +4,6 @@ from pathlib import Path
 import click
 import pendulum
 import yaml
-from models import RuntimeConfiguration, JobConfiguration
 from rich import print
 from rich.console import Console
 from rich.progress import MofNCompleteColumn, Progress, SpinnerColumn
@@ -12,6 +11,7 @@ from rich.text import Text
 
 from pyrunner import __name__ as name
 from pyrunner import __version__ as version
+from pyrunner.models import JobConfiguration, RuntimeConfiguration
 from pyrunner.utils import CONFIG_TEMPLATE, do_job, get_runtime_info
 
 
@@ -55,15 +55,17 @@ def run(yml, template, verbose):
     if not file.exists():
         print("Please specify YAMl configuration file.")
         return
-    
+
     try:
-        if verbose: print("\n>>> Runtime info:")
+        if verbose:
+            print("\n>>> Runtime info:")
         info = get_runtime_info()
-        if verbose: Console().print_json(json.dumps(info))
+        if verbose:
+            Console().print_json(json.dumps(info))
     except Exception as e:
         print(f"Fail to detect Docker engine: {str(e)}")
         return
-    
+
     try:
         with open(file) as f:
             config = yaml.safe_load(f)
@@ -73,12 +75,12 @@ def run(yml, template, verbose):
         print(f"Invalid YAMl configuration file: {str(e)}")
         return
 
-    if verbose: 
+    if verbose:
         print("\n>>> Job config:")
         Console().print_json(json.dumps(runtime))
         print("\n>>> Job queue:")
         Console().print_json(json.dumps(job_queue))
-    
+
     volume = Path(runtime.volume)
     if not volume.exists():
         volume.mkdir(parents=True, exist_ok=True)
@@ -88,13 +90,13 @@ def run(yml, template, verbose):
     print(f"\n>>> Start: {pendulum.now()}")
 
     with Progress(
-            SpinnerColumn(), MofNCompleteColumn(), *Progress.get_default_columns()
-        ) as p:
-            job_progress = p.add_task("[orange]Running...", total=len(job_queue))
-            for job in job_queue:
-                print(f"\n>> {job.get('name', 'No name')}")
-                job = JobConfiguration(**job)
-                do_job(runtime, job)
-                p.update(job_progress, advance=1)
+        SpinnerColumn(), MofNCompleteColumn(), *Progress.get_default_columns()
+    ) as p:
+        job_progress = p.add_task("[orange]Running...", total=len(job_queue))
+        for job in job_queue:
+            print(f"\n>> {job.get('name', 'No name')}")
+            job = JobConfiguration(**job)
+            do_job(runtime, job)
+            p.update(job_progress, advance=1)
 
     print(f"\n>>> End: {pendulum.now()}")
