@@ -1,8 +1,7 @@
 import subprocess
 from pathlib import Path
 
-import json
-from models import RuntimeConfiguration, JobConfiguration
+from pyrunner.models import RuntimeConfiguration, JobConfiguration
 import docker
 from rich.console import Console
 
