@@ -42,6 +42,5 @@ jobs:
           title: ${{ matrix.python-version }}
           run: poetry build --format wheel
           files: |
-            README.md
             config.yaml
             **/*.whl
