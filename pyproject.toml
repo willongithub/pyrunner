@@ -3,7 +3,7 @@ name = "PyRunner"
 version = "0.1.0"
 description = "A tool to run containerized CLI appication in batch via YAML config."
 authors = ["Liam Wu <foo@bar.com>"]
-readme = "README"
+readme = "README.md"
 packages = [{include = "pyrunner"}]
 license = "MIT"
 
