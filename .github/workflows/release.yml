@@ -15,8 +15,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -41,7 +40,8 @@ jobs:
           prerelease: true
           automatic_release_tag: "latest"
           title: ${{ matrix.python-version }}
+          run: poetry build --format wheel
           files: |
             README.md
             config.yaml
-            dist/*.whl
+            **/*.whl
