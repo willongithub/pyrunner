@@ -29,16 +29,11 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: Gr1N/setup-poetry@v8
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          export POETRY_HOME=/opt/poetry
-          python -m venv $POETRY_HOME
-          $POETRY_HOME/bin/pip install poetry
-          poetry install --with dev
+        run: poetry install --with dev
       - name: Build wheel
-        run: |
-          poetry build --format wheel
+        run: poetry build --format wheel
       - name: Publish release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
