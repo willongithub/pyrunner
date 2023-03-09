@@ -1,13 +1,9 @@
-name: Publish
+name: Release
 
 on:
   workflow_run:
     workflows: ["Test"]
     types: [completed]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   release:
@@ -16,18 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11"]
 
     steps:
       - name: Check out Repository
         uses: actions/checkout@v3
-      - name: Setup Python environment ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
       - uses: Gr1N/setup-poetry@v8
       - name: Install dependencies
         run: poetry install --with dev
@@ -38,9 +26,6 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: true
-          automatic_release_tag: "latest"
-          title: ${{ matrix.python-version }}
           run: poetry build --format wheel
           files: |
-            config.yaml
             **/*.whl
