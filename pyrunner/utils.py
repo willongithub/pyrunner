@@ -1,9 +1,10 @@
 import subprocess
 from pathlib import Path
 
-from pyrunner.models import RuntimeConfiguration, JobConfiguration
 import docker
 from rich.console import Console
+
+from pyrunner.models import JobConfiguration, RuntimeConfiguration
 
 
 def get_runtime_info() -> dict:
@@ -58,6 +59,21 @@ def do_job(runtime: RuntimeConfiguration, job: JobConfiguration) -> None:
     subprocess.call(cmd)
 
 
+def start_web_ui() -> None:
+    cmd = [
+        "docker",
+        "run",
+        "--rm",
+        "-it",
+        "--shm-size=8G",
+        "-v",
+        f"{Path.cwd()}/data:/app/data",
+        "qa:latest",
+        "python3 -m qa --web",
+    ]
+    subprocess.call(cmd)
+
+
 CONFIG_TEMPLATE = """# Docker engine runtime configuration.
 runtime:
   shm: 8G
@@ -66,7 +82,7 @@ runtime:
   pull: YES
   volume: data
   image: "qa:latest"
-  entrypoint: "python3.8 -m qa"
+  entrypoint: "python3 -m qa"
 
 # Job list with flags for each run.
 job:

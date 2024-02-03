@@ -8,35 +8,43 @@ from rich import print
 from rich.console import Console
 from rich.progress import MofNCompleteColumn, Progress, SpinnerColumn
 from rich.text import Text
+from trogon import tui
 
 from pyrunner import __name__ as name
 from pyrunner import __version__ as version
 from pyrunner.models import JobConfiguration, RuntimeConfiguration
-from pyrunner.utils import CONFIG_TEMPLATE, do_job, get_runtime_info
+from pyrunner.utils import CONFIG_TEMPLATE, do_job, get_runtime_info, start_web_ui
 
 
-@click.command()
+@tui(help="Start Terminal User Interface")
+@click.group(invoke_without_command=True)
+@click.option(
+    "--web",
+    "-W",
+    is_flag=True,
+    default=False,
+    help="Start Web UI.",
+)
 @click.option(
     "--yml",
     "-Y",
-    default="./config.yaml",
-    help="Specify path to configuration YAML file.",
+    help="Specify path to the job configuration YAML file.",
 )
 @click.option(
     "--template",
     "-T",
     is_flag=True,
     default=False,
-    help="Request a template of configuration file.",
+    help="Get a template of the configuration file.",
 )
 @click.option(
     "--verbose",
     "-V",
     is_flag=True,
     default=True,
-    help="Display detail info.",
+    help="Show detail info.",
 )
-def run(yml, template, verbose):
+def run(web, yml, template, verbose):
     if template:
         output = Path("config_template.yaml")
         output.write_text(CONFIG_TEMPLATE)
@@ -45,16 +53,27 @@ def run(yml, template, verbose):
 
     console = Console()
     title = Text("")
-    title.append(f"\nWelcome to ")
+    title.append("\nWelcome to ")
     title.append(f"{name}", style="bold dark_red")
-    title.append(f" ")
+    title.append(" ")
     title.append(f"v{version}\n", style="italic underline")
     console.print(title)
 
-    file = Path(yml)
-    if not file.exists():
-        print("Please specify YAMl configuration file.")
+    try:
+        if web:
+            print("\n>>> Starting Web UI...\n")
+            start_web_ui()
+            return
+    except Exception as e:
+        print(f"Fail to start Web UI: {str(e)}")
         return
+
+    while not yml:
+        yml = input("Job configuration file: ")
+        if not Path(yml).exists():
+            print("\n>>> File not exist. Please double-check the path.\n")
+            yml = None
+    file = Path(yml)
 
     try:
         if verbose:
